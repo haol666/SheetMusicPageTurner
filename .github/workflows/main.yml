@@ -16,11 +16,11 @@ jobs:
     - name: Set up Xcode
       uses: maxim-lobanov/setup-xcode@v1
       with:
-        xcode-version: '16.0.0'
+        xcode-version: '16.1'
 
     - name: Build
       run: |
         xcodebuild -project SheetMusicPageTurner.xcodeproj \
           -scheme SheetMusicPageTurner \
-          -destination "generic/platform=iOS Simulator,name=iPhone 16" \
+          -destination "generic/platform=iOS Simulator,name=iPhone 15" \
           build
