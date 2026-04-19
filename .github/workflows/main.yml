@@ -1,10 +1,12 @@
-name: iOS Build
+name: iOS Build and Release
 
 on:
   push:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+  release:
+    types: [created]
 
 jobs:
   build:
@@ -25,3 +27,23 @@ jobs:
           -destination "generic/platform=iOS Simulator" \
           -derivedDataPath build \
           build
+
+    - name: Package app
+      run: |
+        mkdir -p output
+        cp -r build/Build/Products/Debug-iphonesimulator/SheetMusicPageTurner.app output/
+        cd output && zip -r SheetMusicPageTurner.app.zip SheetMusicPageTurner.app
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: SheetMusicPageTurner
+        path: output/SheetMusicPageTurner.app.zip
+
+    - name: Release
+      if: github.event_name == 'release'
+      uses: softprops/action-gh-release@v1
+      with:
+        files: output/SheetMusicPageTurner.app.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
