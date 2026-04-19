@@ -9,26 +9,18 @@ on:
 jobs:
   build:
     runs-on: macos-latest
-    
+
     steps:
     - uses: actions/checkout@v2
-    
+
     - name: Set up Xcode
       uses: maxim-lobanov/setup-xcode@v1
       with:
         xcode-version: '16.0.0'
-    
-    - name: List available simulators
-      run: xcrun simctl list devices available
-    
-    - name: Create iOS Simulator
-      run: |
-        UDID=$(xcrun simctl create "iPhone 15" "iPhone 15" "18.0" | tr -d '\n')
-        echo "SIMULATOR_UDID=$UDID" >> $GITHUB_ENV
-    
-    - name: Boot Simulator
-      run: xcrun simctl boot $SIMULATOR_UDID
-    
+
     - name: Build
       run: |
-        xcodebuild -project SheetMusicPageTurner.xcodeproj -scheme SheetMusicPageTurner -destination "platform=iOS Simulator,id=$SIMULATOR_UDID" build
+        xcodebuild -project SheetMusicPageTurner.xcodeproj \
+          -scheme SheetMusicPageTurner \
+          -destination "generic/platform=iOS" \
+          build
