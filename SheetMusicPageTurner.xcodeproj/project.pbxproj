@@ -12,7 +12,6 @@
 		1D6058A30D05DD3D006BFB54 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D6058A20D05DD3D006BFB54 /* ViewController.swift */; };
 		1D6058A70D05DD3D006BFB54 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1D6058A50D05DD3D006BFB54 /* Main.storyboard */; };
 		1D6058B10D05DD3D006BFB54 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1D6058A80D05DD3D006BFB54 /* Assets.xcassets */; };
-		1D6058AF0D05DD3D006BFB54 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1D6058AB0D05DD3D006BFB54 /* Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -138,7 +137,6 @@
 			files = (
 				1D6058A70D05DD3D006BFB54 /* Main.storyboard in Resources */,
 				1D6058B10D05DD3D006BFB54 /* Assets.xcassets in Resources */,
-				1D6058AF0D05DD3D006BFB54 /* Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
