@@ -22,5 +22,5 @@ jobs:
       run: |
         xcodebuild -project SheetMusicPageTurner.xcodeproj \
           -scheme SheetMusicPageTurner \
-          -destination "generic/platform=iOS Simulator,name=iPhone 15" \
+          -destination "generic/platform=iOS Simulator" \
           build
