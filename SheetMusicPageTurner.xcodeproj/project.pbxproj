@@ -217,7 +217,7 @@
 			};
 			name = Debug;
 		};
-		1D60589B0D05DD3D006BFB54 /* Release */ = {
+		1D6058B00D05DD3D006BFB54 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -326,7 +326,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1D6058970D05DD3D006BFB54 /* Debug */,
-				1D60589B0D05DD3D006BFB54 /* Release */,
+				1D6058B00D05DD3D006BFB54 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
