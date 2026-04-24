@@ -36,13 +36,9 @@ jobs:
         <plist version="1.0">
         <dict>
             <key>method</key>
-            <string>app-store</string>
-            <key>signingCertificate</key>
-            <string>Apple Distribution</string>
+            <string>development</string>
             <key>signingStyle</key>
-            <string>manual</string>
-            <key>teamID</key>
-            <string></string>
+            <string>automatic</string>
         </dict>
         </plist>
         EOF
