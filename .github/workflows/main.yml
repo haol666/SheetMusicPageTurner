@@ -20,30 +20,52 @@ jobs:
       with:
         xcode-version: '15.4'
 
-    - name: Build
+    - name: Build IPA
       run: |
         xcodebuild -project SheetMusicPageTurner.xcodeproj \
           -scheme SheetMusicPageTurner \
-          -destination "generic/platform=iOS Simulator" \
-          -derivedDataPath build \
-          build
+          -configuration Release \
+          -archivePath build/SheetMusicPageTurner.xcarchive \
+          archive
+
+    - name: Export IPA
+      run: |
+        xcodebuild -exportArchive \
+          -archivePath build/SheetMusicPageTurner.xcarchive \
+          -exportPath output \
+          -exportOptionsPlist << 'EOF'
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>signingCertificate</key>
+            <string>Apple Distribution</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>teamID</key>
+            <string></string>
+        </dict>
+        </plist>
+        EOF
 
     - name: Package app
       run: |
         mkdir -p output
-        cp -r build/Build/Products/Debug-iphonesimulator/SheetMusicPageTurner.app output/
-        cd output && zip -r SheetMusicPageTurner.app.zip SheetMusicPageTurner.app
+        mv output/SheetMusicPageTurner.ipa output/ || cp -r build/Build/Products/Debug-iphonesimulator/SheetMusicPageTurner.app output/SheetMusicPageTurner.app
+        cd output && zip -r SheetMusicPageTurner.app.zip SheetMusicPageTurner.app 2>/dev/null || zip -r SheetMusicPageTurner.ipa.zip SheetMusicPageTurner.ipa
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: SheetMusicPageTurner
-        path: output/SheetMusicPageTurner.app.zip
+        path: output/
 
     - name: Release
       if: github.event_name == 'release'
       uses: softprops/action-gh-release@v1
       with:
-        files: output/SheetMusicPageTurner.app.zip
+        files: output/*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
