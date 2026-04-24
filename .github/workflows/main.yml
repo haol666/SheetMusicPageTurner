@@ -20,37 +20,19 @@ jobs:
       with:
         xcode-version: '15.4'
 
-    - name: Build IPA
+    - name: Build
       run: |
         xcodebuild -project SheetMusicPageTurner.xcodeproj \
           -scheme SheetMusicPageTurner \
-          -configuration Release \
-          -archivePath build/SheetMusicPageTurner.xcarchive \
-          archive
-
-    - name: Export IPA
-      run: |
-        cat > /tmp/ExportOptions.plist << 'EOF'
-        <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-        <plist version="1.0">
-        <dict>
-            <key>method</key>
-            <string>validation</string>
-        </dict>
-        </plist>
-        EOF
-        
-        xcodebuild -exportArchive \
-          -archivePath build/SheetMusicPageTurner.xcarchive \
-          -exportPath output \
-          -exportOptionsPlist /tmp/ExportOptions.plist
+          -destination "generic/platform=iOS Simulator" \
+          -derivedDataPath build \
+          build
 
     - name: Package app
       run: |
         mkdir -p output
-        mv output/SheetMusicPageTurner.ipa output/ || cp -r build/Build/Products/Debug-iphonesimulator/SheetMusicPageTurner.app output/SheetMusicPageTurner.app
-        cd output && zip -r SheetMusicPageTurner.app.zip SheetMusicPageTurner.app 2>/dev/null || zip -r SheetMusicPageTurner.ipa.zip SheetMusicPageTurner.ipa
+        cp -r build/Build/Products/Debug-iphonesimulator/SheetMusicPageTurner.app output/
+        cd output && zip -r SheetMusicPageTurner.app.zip SheetMusicPageTurner.app
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
