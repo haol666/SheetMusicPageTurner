@@ -36,9 +36,7 @@ jobs:
         <plist version="1.0">
         <dict>
             <key>method</key>
-            <string>development</string>
-            <key>signingStyle</key>
-            <string>automatic</string>
+            <string>none</string>
         </dict>
         </plist>
         EOF
