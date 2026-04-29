@@ -26,6 +26,7 @@ jobs:
           -scheme SheetMusicPageTurner \
           -destination "generic/platform=iOS Simulator" \
           -derivedDataPath build \
+          -IPHONEOS_DEPLOYMENT_TARGET=12.0 \
           build
 
     - name: Package app
