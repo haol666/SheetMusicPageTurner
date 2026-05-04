@@ -19,8 +19,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
     private var currentScore: ScoreManager.Score?
     private var currentPage = 0
 
-    private let mouthOpenThreshold: CGFloat = 0.5
-    private let headNodThreshold: CGFloat = 0.05
+    private var mouthOpenThreshold: CGFloat = 0.5
     private var lastActionTime = Date().timeIntervalSince1970
     private let actionCooldown = 1.0
 
@@ -242,7 +241,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
     }
 
     private func previousPage() {
-        guard let score = currentScore else { return }
+        guard currentScore != nil else { return }
         guard currentPage > 0 else { return }
 
         performPageTurn {
