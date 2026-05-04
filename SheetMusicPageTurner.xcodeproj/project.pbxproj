@@ -12,6 +12,9 @@
 		1D6058A30D05DD3D006BFB54 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D6058A20D05DD3D006BFB54 /* ViewController.swift */; };
 		1D6058A70D05DD3D006BFB54 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1D6058A50D05DD3D006BFB54 /* Main.storyboard */; };
 		1D6058B10D05DD3D006BFB54 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1D6058A80D05DD3D006BFB54 /* Assets.xcassets */; };
+		1D6058C00D05DD3D006BFB54 /* ScoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D6058C01D05DD3D006BFB54 /* ScoreManager.swift */; };
+		1D6058C10D05DD3D006BFB54 /* ScoreImportViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D6058C11D05DD3D006BFB54 /* ScoreImportViewController.swift */; };
+		1D6058C20D05DD3D006BFB54 /* ScoreDisplayViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D6058C21D05DD3D006BFB54 /* ScoreDisplayViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -21,6 +24,9 @@
 		1D6058A20D05DD3D006BFB54 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		1D6058A80D05DD3D006BFB54 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1D6058AB0D05DD3D006BFB54 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		1D6058C01D05DD3D006BFB54 /* ScoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreManager.swift; sourceTree = "<group>"; };
+		1D6058C11D05DD3D006BFB54 /* ScoreImportViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreImportViewController.swift; sourceTree = "<group>"; };
+		1D6058C21D05DD3D006BFB54 /* ScoreDisplayViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreDisplayViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -48,6 +54,9 @@
 				1D60589E0D05DD3D006BFB54 /* AppDelegate.swift */,
 				1D6058A00D05DD3D006BFB54 /* SceneDelegate.swift */,
 				1D6058A20D05DD3D006BFB54 /* ViewController.swift */,
+				1D6058C01D05DD3D006BFB54 /* ScoreManager.swift */,
+				1D6058C11D05DD3D006BFB54 /* ScoreImportViewController.swift */,
+				1D6058C21D05DD3D006BFB54 /* ScoreDisplayViewController.swift */,
 				1D6058A50D05DD3D006BFB54 /* Main.storyboard */,
 				1D6058A80D05DD3D006BFB54 /* Assets.xcassets */,
 				1D6058AB0D05DD3D006BFB54 /* Info.plist */,
@@ -136,6 +145,9 @@
 				1D60589F0D05DD3D006BFB54 /* AppDelegate.swift in Sources */,
 				1D6058A10D05DD3D006BFB54 /* SceneDelegate.swift in Sources */,
 				1D6058A30D05DD3D006BFB54 /* ViewController.swift in Sources */,
+				1D6058C00D05DD3D006BFB54 /* ScoreManager.swift in Sources */,
+				1D6058C10D05DD3D006BFB54 /* ScoreImportViewController.swift in Sources */,
+				1D6058C20D05DD3D006BFB54 /* ScoreDisplayViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
