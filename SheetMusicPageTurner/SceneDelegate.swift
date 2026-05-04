@@ -9,10 +9,27 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         let window = UIWindow(windowScene: windowScene)
 
-        let scoreImportVC = ScoreImportViewController()
-        let navController = UINavigationController(rootViewController: scoreImportVC)
+        let tabBarController = UITabBarController()
 
-        window.rootViewController = navController
+        let scoreImportVC = ScoreImportViewController()
+        let scoreImportNav = UINavigationController(rootViewController: scoreImportVC)
+        scoreImportNav.tabBarItem = UITabBarItem(
+            title: "琴谱",
+            image: UIImage(systemName: "book"),
+            selectedImage: UIImage(systemName: "book.fill")
+        )
+
+        let viewController = ViewController()
+        let viewControllerNav = UINavigationController(rootViewController: viewController)
+        viewControllerNav.tabBarItem = UITabBarItem(
+            title: "翻页",
+            image: UIImage(systemName: "camera"),
+            selectedImage: UIImage(systemName: "camera.fill")
+        )
+
+        tabBarController.viewControllers = [scoreImportNav, viewControllerNav]
+
+        window.rootViewController = tabBarController
         window.makeKeyAndVisible()
         self.window = window
     }
