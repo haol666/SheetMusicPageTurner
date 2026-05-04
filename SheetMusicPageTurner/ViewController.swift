@@ -15,13 +15,21 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
     private let actionButton = UIButton(type: .system)
     private let settingsButton = UIButton(type: .system)
     private let noScoreLabel = UILabel()
+    private let gestureHintLabel = UILabel()
 
     private var currentScore: ScoreManager.Score?
     private var currentPage = 0
 
-    private var mouthOpenThreshold: CGFloat = 0.5
+    private var mouthOpenThreshold: CGFloat = 0.7
+    private var headNodThreshold: CGFloat = 0.12
     private var lastActionTime = Date().timeIntervalSince1970
     private let actionCooldown = 1.0
+
+    private var previousNoseY: CGFloat = 0.5
+    private var isFirstFaceDetection = true
+
+    private var lastMouthOpenTime: TimeInterval = 0
+    private var lastHeadNodTime: TimeInterval = 0
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -33,6 +41,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         loadCurrentScore()
+        isFirstFaceDetection = true
         if !session.isRunning {
             session.startRunning()
         }
@@ -81,11 +90,20 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         cameraPreviewView.layer.borderColor = UIColor.white.cgColor
         view.addSubview(cameraPreviewView)
 
-        actionButton.setTitle("手动翻页", for: .normal)
+        gestureHintLabel.text = "张嘴→下一页 | 点头→上一页"
+        gestureHintLabel.textAlignment = .center
+        gestureHintLabel.font = UIFont.systemFont(ofSize: 12)
+        gestureHintLabel.textColor = .gray
+        gestureHintLabel.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+        gestureHintLabel.layer.cornerRadius = 4
+        gestureHintLabel.clipsToBounds = true
+        view.addSubview(gestureHintLabel)
+
+        actionButton.setTitle("下一页", for: .normal)
         actionButton.backgroundColor = .systemBlue
         actionButton.setTitleColor(.white, for: .normal)
         actionButton.layer.cornerRadius = 8
-        actionButton.addTarget(self, action: #selector(manualPageTurn), for: .touchUpInside)
+        actionButton.addTarget(self, action: #selector(manualNextPage), for: .touchUpInside)
         view.addSubview(actionButton)
 
         settingsButton.setTitle("设置", for: .normal)
@@ -104,6 +122,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         actionButton.translatesAutoresizingMaskIntoConstraints = false
         settingsButton.translatesAutoresizingMaskIntoConstraints = false
         noScoreLabel.translatesAutoresizingMaskIntoConstraints = false
+        gestureHintLabel.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
             scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
@@ -125,6 +144,11 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
             pageLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             pageLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 150),
             pageLabel.heightAnchor.constraint(equalToConstant: 40),
+
+            gestureHintLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 130),
+            gestureHintLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            gestureHintLabel.widthAnchor.constraint(equalToConstant: 220),
+            gestureHintLabel.heightAnchor.constraint(equalToConstant: 30),
 
             cameraPreviewView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
             cameraPreviewView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
@@ -153,12 +177,14 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
             displayCurrentPage()
             scrollView.isHidden = false
             noScoreLabel.isHidden = true
+            gestureHintLabel.isHidden = false
         } else {
             currentScore = nil
             scrollView.isHidden = true
             noScoreLabel.isHidden = false
             pageLabel.isHidden = true
             actionButton.isHidden = true
+            gestureHintLabel.isHidden = true
         }
     }
 
@@ -226,7 +252,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         }
     }
 
-    @objc private func manualPageTurn() {
+    @objc private func manualNextPage() {
         nextPage()
     }
 
@@ -264,7 +290,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
     }
 
     @objc private func openSettings() {
-        let alert = UIAlertController(title: "设置", message: "调整面部识别灵敏度", preferredStyle: .actionSheet)
+        let alert = UIAlertController(title: "面部识别设置", message: "调整翻页动作灵敏度", preferredStyle: .actionSheet)
 
         alert.addAction(UIAlertAction(title: "张嘴灵敏度: 高", style: .default) { [weak self] _ in
             self?.mouthOpenThreshold = 0.3
@@ -276,6 +302,18 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
 
         alert.addAction(UIAlertAction(title: "张嘴灵敏度: 低", style: .default) { [weak self] _ in
             self?.mouthOpenThreshold = 0.7
+        })
+
+        alert.addAction(UIAlertAction(title: "点头灵敏度: 高", style: .default) { [weak self] _ in
+            self?.headNodThreshold = 0.05
+        })
+
+        alert.addAction(UIAlertAction(title: "点头灵敏度: 中", style: .default) { [weak self] _ in
+            self?.headNodThreshold = 0.08
+        })
+
+        alert.addAction(UIAlertAction(title: "点头灵敏度: 低", style: .default) { [weak self] _ in
+            self?.headNodThreshold = 0.12
         })
 
         alert.addAction(UIAlertAction(title: "取消", style: .cancel))
@@ -301,6 +339,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         for face in results {
             guard let landmarks = face.landmarks else { continue }
             detectMouth(landmarks: landmarks)
+            detectHeadNod(landmarks: landmarks)
         }
     }
 
@@ -320,9 +359,40 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
 
         let mar = mouthHeight / mouthWidth
 
-        if mar > mouthOpenThreshold {
+        let currentTime = Date().timeIntervalSince1970
+        if mar > mouthOpenThreshold && currentTime - lastMouthOpenTime > actionCooldown {
+            lastMouthOpenTime = currentTime
             DispatchQueue.main.async {
                 self.nextPage()
+            }
+        }
+    }
+
+    private func detectHeadNod(landmarks: VNFaceLandmarks2D) {
+        guard let nose = landmarks.nose,
+              let leftEye = landmarks.leftEye,
+              let rightEye = landmarks.rightEye else { return }
+
+        guard nose.normalizedPoints.count > 0,
+              leftEye.normalizedPoints.count > 0,
+              rightEye.normalizedPoints.count > 0 else { return }
+
+        let nosePoint = nose.normalizedPoints[0]
+
+        if isFirstFaceDetection {
+            previousNoseY = nosePoint.y
+            isFirstFaceDetection = false
+            return
+        }
+
+        let noseDelta = nosePoint.y - previousNoseY
+        previousNoseY = nosePoint.y
+
+        let currentTime = Date().timeIntervalSince1970
+        if noseDelta > headNodThreshold && currentTime - lastHeadNodTime > actionCooldown {
+            lastHeadNodTime = currentTime
+            DispatchQueue.main.async {
+                self.previousPage()
             }
         }
     }
