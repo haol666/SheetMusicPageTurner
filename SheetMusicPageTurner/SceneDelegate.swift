@@ -1,5 +1,6 @@
 import UIKit
 
+@available(iOS 13.0, *)
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
@@ -9,6 +10,29 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         let window = UIWindow(windowScene: windowScene)
 
+        let tabBarController = createTabBarController()
+
+        window.rootViewController = tabBarController
+        window.makeKeyAndVisible()
+        self.window = window
+    }
+
+    func sceneDidDisconnect(_ scene: UIScene) {
+    }
+
+    func sceneDidBecomeActive(_ scene: UIScene) {
+    }
+
+    func sceneWillResignActive(_ scene: UIScene) {
+    }
+
+    func sceneWillEnterForeground(_ scene: UIScene) {
+    }
+
+    func sceneDidEnterBackground(_ scene: UIScene) {
+    }
+
+    private func createTabBarController() -> UITabBarController {
         let tabBarController = UITabBarController()
 
         let scoreImportVC = ScoreImportViewController()
@@ -29,23 +53,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         tabBarController.viewControllers = [scoreImportNav, viewControllerNav]
 
-        window.rootViewController = tabBarController
-        window.makeKeyAndVisible()
-        self.window = window
-    }
-
-    func sceneDidDisconnect(_ scene: UIScene) {
-    }
-
-    func sceneDidBecomeActive(_ scene: UIScene) {
-    }
-
-    func sceneWillResignActive(_ scene: UIScene) {
-    }
-
-    func sceneWillEnterForeground(_ scene: UIScene) {
-    }
-
-    func sceneDidEnterBackground(_ scene: UIScene) {
+        return tabBarController
     }
 }
