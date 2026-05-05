@@ -32,6 +32,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
     private let gestureHintLabel = UILabel()
 
     private var currentScore: ScoreManager.Score?
+    private var currentPages: [UIImage] = []
     private var currentPage = 0
 
     private var mouthOpenThreshold: CGFloat = 0.7
@@ -195,6 +196,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
     private func loadCurrentScore() {
         if let firstScore = ScoreManager.shared.scores.first {
             currentScore = firstScore
+            currentPages = ScoreManager.shared.getPages(for: firstScore)
             currentPage = 0
             displayCurrentPage()
             scrollView.isHidden = false
@@ -202,6 +204,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
             gestureHintLabel.isHidden = false
         } else {
             currentScore = nil
+            currentPages = []
             scrollView.isHidden = true
             noScoreLabel.isHidden = false
             pageLabel.isHidden = true
@@ -211,11 +214,10 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
     }
 
     private func displayCurrentPage() {
-        guard let score = currentScore,
-              currentPage >= 0 && currentPage < score.pages.count else { return }
+        guard currentPage >= 0 && currentPage < currentPages.count else { return }
 
-        pageImageView.image = score.pages[currentPage]
-        pageLabel.text = "  第 \(currentPage + 1) / \(score.pages.count) 页  "
+        pageImageView.image = currentPages[currentPage]
+        pageLabel.text = "  第 \(currentPage + 1) / \(currentPages.count) 页  "
         pageLabel.isHidden = false
         actionButton.isHidden = false
         scrollView.setZoomScale(1.0, animated: false)
@@ -279,8 +281,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
     }
 
     private func nextPage() {
-        guard let score = currentScore else { return }
-        guard currentPage < score.pages.count - 1 else { return }
+        guard currentPage < currentPages.count - 1 else { return }
 
         performPageTurn {
             self.currentPage += 1
