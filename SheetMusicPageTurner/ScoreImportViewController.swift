@@ -155,12 +155,7 @@ extension ScoreImportViewController: UIDocumentPickerDelegate {
             return
         }
 
-        guard url.startAccessingSecurityScopedResource() else {
-            showError("无法访问文件")
-            return
-        }
-
-        defer { url.stopAccessingSecurityScopedResource() }
+        print("DocumentPicker: Picked URL: \(url)")
 
         if let score = ScoreManager.shared.importPDF(from: url) {
             loadScores()
