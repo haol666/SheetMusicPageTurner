@@ -150,17 +150,23 @@ extension ScoreImportViewController: UITableViewDelegate, UITableViewDataSource 
 
 extension ScoreImportViewController: UIDocumentPickerDelegate {
     func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
-        guard let url = urls.first else { return }
+        guard let url = urls.first else {
+            showError("未选择任何文件")
+            return
+        }
 
-        if url.startAccessingSecurityScopedResource() {
-            defer { url.stopAccessingSecurityScopedResource() }
+        guard url.startAccessingSecurityScopedResource() else {
+            showError("无法访问文件")
+            return
+        }
 
-            if let score = ScoreManager.shared.importPDF(from: url) {
-                loadScores()
-                openScore(at: scores.firstIndex(where: { $0.id == score.id }) ?? 0)
-            } else {
-                showError("无法读取PDF文件")
-            }
+        defer { url.stopAccessingSecurityScopedResource() }
+
+        if let score = ScoreManager.shared.importPDF(from: url) {
+            loadScores()
+            openScore(at: scores.firstIndex(where: { $0.id == score.id }) ?? 0)
+        } else {
+            showError("无法读取PDF文件")
         }
     }
 }
