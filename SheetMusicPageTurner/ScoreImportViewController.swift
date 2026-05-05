@@ -103,6 +103,12 @@ class ScoreImportViewController: UIViewController {
         ScoreManager.shared.deleteScore(at: index)
         loadScores()
     }
+
+    private func showError(_ message: String) {
+        let alert = UIAlertController(title: "错误", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        present(alert, animated: true)
+    }
 }
 
 extension ScoreImportViewController: UITableViewDelegate, UITableViewDataSource {
