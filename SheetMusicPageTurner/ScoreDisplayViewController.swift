@@ -3,6 +3,7 @@ import UIKit
 class ScoreDisplayViewController: UIViewController {
 
     private let score: ScoreManager.Score
+    private var pages: [UIImage] = []
     private var currentPage = 0
     private let scrollView = UIScrollView()
     private let pageImageView = UIImageView()
@@ -21,7 +22,12 @@ class ScoreDisplayViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
+        loadPages()
         displayPage(currentPage)
+    }
+
+    private func loadPages() {
+        pages = ScoreManager.shared.getPages(for: score)
     }
 
     private func setupUI() {
@@ -49,7 +55,7 @@ class ScoreDisplayViewController: UIViewController {
         pageLabel.font = UIFont.systemFont(ofSize: 16)
         view.addSubview(pageLabel)
 
-        pageControl.numberOfPages = score.pages.count
+        pageControl.numberOfPages = score.pageFileNames.count
         pageControl.currentPage = 0
         pageControl.addTarget(self, action: #selector(pageControlChanged), for: .valueChanged)
         view.addSubview(pageControl)
@@ -86,10 +92,10 @@ class ScoreDisplayViewController: UIViewController {
     }
 
     private func displayPage(_ page: Int) {
-        guard page >= 0 && page < score.pages.count else { return }
+        guard page >= 0 && page < pages.count else { return }
         currentPage = page
-        pageImageView.image = score.pages[page]
-        pageLabel.text = "第 \(page + 1) 页，共 \(score.pages.count) 页"
+        pageImageView.image = pages[page]
+        pageLabel.text = "第 \(page + 1) 页，共 \(pages.count) 页"
         pageControl.currentPage = page
         scrollView.setZoomScale(1.0, animated: false)
     }
@@ -110,7 +116,7 @@ class ScoreDisplayViewController: UIViewController {
     }
 
     private func nextPage() {
-        guard currentPage < score.pages.count - 1 else { return }
+        guard currentPage < pages.count - 1 else { return }
         displayPage(currentPage + 1)
     }
 

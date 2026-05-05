@@ -126,11 +126,11 @@ extension ScoreImportViewController: UITableViewDelegate, UITableViewDataSource 
         if #available(iOS 14.0, *) {
             var content = cell.defaultContentConfiguration()
             content.text = score.name
-            content.secondaryText = "\(score.pages.count) 页"
+            content.secondaryText = "\(score.pageFileNames.count) 页"
             cell.contentConfiguration = content
         } else {
             cell.textLabel?.text = score.name
-            cell.detailTextLabel?.text = "\(score.pages.count) 页"
+            cell.detailTextLabel?.text = "\(score.pageFileNames.count) 页"
         }
         cell.accessoryType = .disclosureIndicator
         return cell
