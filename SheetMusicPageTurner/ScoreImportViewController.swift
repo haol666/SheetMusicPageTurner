@@ -113,10 +113,15 @@ extension ScoreImportViewController: UITableViewDelegate, UITableViewDataSource 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ScoreCell", for: indexPath)
         let score = scores[indexPath.row]
-        var content = cell.defaultContentConfiguration()
-        content.text = score.name
-        content.secondaryText = "\(score.pages.count) 页"
-        cell.contentConfiguration = content
+        if #available(iOS 14.0, *) {
+            var content = cell.defaultContentConfiguration()
+            content.text = score.name
+            content.secondaryText = "\(score.pages.count) 页"
+            cell.contentConfiguration = content
+        } else {
+            cell.textLabel?.text = score.name
+            cell.detailTextLabel?.text = "\(score.pages.count) 页"
+        }
         cell.accessoryType = .disclosureIndicator
         return cell
     }
@@ -151,6 +156,7 @@ extension ScoreImportViewController: UIDocumentPickerDelegate {
 }
 
 extension ScoreImportViewController: PHPickerViewControllerDelegate {
+    @available(iOS 14.0, *)
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         picker.dismiss(animated: true)
 
