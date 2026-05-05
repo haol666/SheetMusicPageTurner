@@ -23,34 +23,50 @@ class ScoreManager {
         var error: NSError?
         
         var result: Score?
-        fileCoordinator.coordinate(readingItemAt: url, error: &error) { readURL in
-            guard let document = PDFDocument(url: readURL) else { return }
-            
-            var pages: [UIImage] = []
-            for i in 0..<document.pageCount {
-                guard let page = document.page(at: i) else { continue }
-                let pageRect = page.bounds(for: .mediaBox)
-                let renderer = UIGraphicsImageRenderer(size: pageRect.size)
-                let image = renderer.image { ctx in
-                    UIColor.white.setFill()
-                    ctx.fill(pageRect)
-                    ctx.cgContext.translateBy(x: 0, y: pageRect.size.height)
-                    ctx.cgContext.scaleBy(x: 1, y: -1)
-                    page.draw(with: .mediaBox, to: ctx.cgContext)
+        fileCoordinator.coordinate(readingItemAt: url, options: .withoutChanges, error: &error) { readURL in
+            do {
+                let tempDir = FileManager.default.temporaryDirectory
+                let fileName = url.lastPathComponent
+                let destURL = tempDir.appendingPathComponent(fileName)
+                
+                if FileManager.default.fileExists(atPath: destURL.path) {
+                    try FileManager.default.removeItem(at: destURL)
                 }
-                pages.append(image)
+                
+                try FileManager.default.copyItem(at: readURL, to: destURL)
+                
+                guard let document = PDFDocument(url: destURL) else { return }
+                
+                var pages: [UIImage] = []
+                for i in 0..<document.pageCount {
+                    guard let page = document.page(at: i) else { continue }
+                    let pageRect = page.bounds(for: .mediaBox)
+                    let renderer = UIGraphicsImageRenderer(size: pageRect.size)
+                    let image = renderer.image { ctx in
+                        UIColor.white.setFill()
+                        ctx.fill(pageRect)
+                        ctx.cgContext.translateBy(x: 0, y: pageRect.size.height)
+                        ctx.cgContext.scaleBy(x: 1, y: -1)
+                        page.draw(with: .mediaBox, to: ctx.cgContext)
+                    }
+                    pages.append(image)
+                }
+                
+                result = Score(
+                    id: UUID(),
+                    name: destURL.deletingPathExtension().lastPathComponent,
+                    pages: pages,
+                    createdAt: Date()
+                )
+                
+                try FileManager.default.removeItem(at: destURL)
+            } catch let copyError {
+                print("Error copying file: \(copyError.localizedDescription)")
             }
-            
-            result = Score(
-                id: UUID(),
-                name: readURL.deletingPathExtension().lastPathComponent,
-                pages: pages,
-                createdAt: Date()
-            )
         }
         
         if let error = error {
-            print("Error reading PDF: \(error.localizedDescription)")
+            print("File coordinator error: \(error.localizedDescription)")
             return nil
         }
         
