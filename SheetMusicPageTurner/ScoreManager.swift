@@ -19,23 +19,34 @@ class ScoreManager {
     }
 
     func importPDF(from url: URL) -> Score? {
+        print("ScoreManager: importPDF called with URL: \(url)")
+        
         let fileCoordinator = NSFileCoordinator()
-        var error: NSError?
+        var coordinatorError: NSError?
         
         var result: Score?
-        fileCoordinator.coordinate(readingItemAt: url, options: .withoutChanges, error: &error) { readURL in
+        fileCoordinator.coordinate(readingItemAt: url, options: .withoutChanges, error: &coordinatorError) { readURL in
+            print("ScoreManager: File coordinator succeeded, readURL: \(readURL)")
+            
             do {
                 let tempDir = FileManager.default.temporaryDirectory
                 let fileName = url.lastPathComponent
                 let destURL = tempDir.appendingPathComponent(fileName)
+                print("ScoreManager: Copying to temp URL: \(destURL)")
                 
                 if FileManager.default.fileExists(atPath: destURL.path) {
                     try FileManager.default.removeItem(at: destURL)
+                    print("ScoreManager: Removed existing temp file")
                 }
                 
                 try FileManager.default.copyItem(at: readURL, to: destURL)
+                print("ScoreManager: File copied successfully")
                 
-                guard let document = PDFDocument(url: destURL) else { return }
+                guard let document = PDFDocument(url: destURL) else {
+                    print("ScoreManager: Failed to create PDFDocument")
+                    return
+                }
+                print("ScoreManager: PDFDocument created, pages: \(document.pageCount)")
                 
                 var pages: [UIImage] = []
                 for i in 0..<document.pageCount {
@@ -51,6 +62,7 @@ class ScoreManager {
                     }
                     pages.append(image)
                 }
+                print("ScoreManager: Rendered \(pages.count) pages")
                 
                 result = Score(
                     id: UUID(),
@@ -60,18 +72,24 @@ class ScoreManager {
                 )
                 
                 try FileManager.default.removeItem(at: destURL)
+                print("ScoreManager: Temp file removed")
             } catch let copyError {
-                print("Error copying file: \(copyError.localizedDescription)")
+                print("ScoreManager: Error processing file: \(copyError.localizedDescription)")
+                print("ScoreManager: Error details: \(copyError)")
             }
         }
         
-        if let error = error {
-            print("File coordinator error: \(error.localizedDescription)")
+        if let error = coordinatorError {
+            print("ScoreManager: File coordinator error: \(error.localizedDescription)")
+            print("ScoreManager: Error code: \(error.code)")
             return nil
         }
         
         if let score = result {
             scores.append(score)
+            print("ScoreManager: Score added successfully, total scores: \(scores.count)")
+        } else {
+            print("ScoreManager: Result is nil, score not added")
         }
         
         return result
