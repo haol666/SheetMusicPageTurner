@@ -336,6 +336,11 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
 
         alert.addAction(UIAlertAction(title: "取消", style: .cancel))
 
+        if let popover = alert.popoverPresentationController {
+            popover.sourceView = settingsButton
+            popover.sourceRect = settingsButton.bounds
+        }
+
         present(alert, animated: true)
     }
 
@@ -359,6 +364,12 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         }
 
         alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+
+        if let popover = alert.popoverPresentationController {
+            popover.sourceView = view
+            popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
+        }
+
         present(alert, animated: true)
     }
 
@@ -396,6 +407,11 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         })
 
         alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+
+        if let popover = alert.popoverPresentationController {
+            popover.sourceView = view
+            popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
+        }
 
         present(alert, animated: true)
     }
