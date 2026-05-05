@@ -81,8 +81,12 @@ class ScoreManager {
             let fileURL = scoreDir.appendingPathComponent(fileName)
 
             if let data = image.pngData() {
-                try data.write(to: fileURL)
-                pageFileNames.append(fileName)
+                do {
+                    try data.write(to: fileURL)
+                    pageFileNames.append(fileName)
+                } catch {
+                    print("Failed to write page \(i): \(error)")
+                }
             }
         }
         print("ScoreManager: Saved \(pageFileNames.count) pages")
