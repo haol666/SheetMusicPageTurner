@@ -26,7 +26,11 @@ class ScoreDisplayViewController: UIViewController {
 
     private func setupUI() {
         title = score.name
-        view.backgroundColor = .systemBackground
+        if #available(iOS 13.0, *) {
+            view.backgroundColor = .systemBackground
+        } else {
+            view.backgroundColor = .white
+        }
 
         let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleTap))
         view.addGestureRecognizer(gestureRecognizer)
@@ -60,7 +64,7 @@ class ScoreDisplayViewController: UIViewController {
         pageControl.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scrollView.topAnchor.constraint(equalTo: view.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
@@ -72,11 +76,11 @@ class ScoreDisplayViewController: UIViewController {
             pageImageView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
             pageImageView.heightAnchor.constraint(equalTo: scrollView.heightAnchor),
 
-            pageLabel.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -60),
+            pageLabel.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -60),
             pageLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             pageLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
 
-            pageControl.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
+            pageControl.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -20),
             pageControl.centerXAnchor.constraint(equalTo: view.centerXAnchor)
         ])
     }

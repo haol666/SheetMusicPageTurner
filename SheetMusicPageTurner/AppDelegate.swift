@@ -20,19 +20,37 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         let scoreImportVC = ScoreImportViewController()
         let scoreImportNav = UINavigationController(rootViewController: scoreImportVC)
-        scoreImportNav.tabBarItem = UITabBarItem(
-            title: "琴谱",
-            image: UIImage(systemName: "book"),
-            selectedImage: UIImage(systemName: "book.fill")
-        )
+
+        if #available(iOS 13.0, *) {
+            scoreImportNav.tabBarItem = UITabBarItem(
+                title: "琴谱",
+                image: UIImage(systemName: "book"),
+                selectedImage: UIImage(systemName: "book.fill")
+            )
+        } else {
+            scoreImportNav.tabBarItem = UITabBarItem(
+                title: "琴谱",
+                image: UIImage(named: "book"),
+                selectedImage: UIImage(named: "book")
+            )
+        }
 
         let viewController = ViewController()
         let viewControllerNav = UINavigationController(rootViewController: viewController)
-        viewControllerNav.tabBarItem = UITabBarItem(
-            title: "翻页",
-            image: UIImage(systemName: "camera"),
-            selectedImage: UIImage(systemName: "camera.fill")
-        )
+
+        if #available(iOS 13.0, *) {
+            viewControllerNav.tabBarItem = UITabBarItem(
+                title: "翻页",
+                image: UIImage(systemName: "camera"),
+                selectedImage: UIImage(systemName: "camera.fill")
+            )
+        } else {
+            viewControllerNav.tabBarItem = UITabBarItem(
+                title: "翻页",
+                image: UIImage(named: "camera"),
+                selectedImage: UIImage(named: "camera")
+            )
+        }
 
         tabBarController.viewControllers = [scoreImportNav, viewControllerNav]
 

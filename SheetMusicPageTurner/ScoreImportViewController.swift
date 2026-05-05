@@ -15,7 +15,11 @@ class ScoreImportViewController: UIViewController {
 
     private func setupUI() {
         title = "琴谱管理"
-        view.backgroundColor = .systemBackground
+        if #available(iOS 13.0, *) {
+            view.backgroundColor = .systemBackground
+        } else {
+            view.backgroundColor = .white
+        }
 
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .add,
@@ -29,7 +33,7 @@ class ScoreImportViewController: UIViewController {
         view.addSubview(tableView)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            tableView.topAnchor.constraint(equalTo: view.topAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
@@ -58,20 +62,35 @@ class ScoreImportViewController: UIViewController {
     }
 
     private func importPDF() {
-        let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: [UTType.pdf])
-        documentPicker.delegate = self
-        documentPicker.allowsMultipleSelection = false
-        present(documentPicker, animated: true)
+        if #available(iOS 14.0, *) {
+            let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: [UTType.pdf])
+            documentPicker.delegate = self
+            documentPicker.allowsMultipleSelection = false
+            present(documentPicker, animated: true)
+        } else {
+            let documentPicker = UIDocumentPickerViewController(documentTypes: ["com.adobe.pdf"], in: .import)
+            documentPicker.delegate = self
+            documentPicker.allowsMultipleSelection = false
+            present(documentPicker, animated: true)
+        }
     }
 
     private func importImages() {
-        var config = PHPickerConfiguration()
-        config.selectionLimit = 20
-        config.filter = .images
+        if #available(iOS 14.0, *) {
+            var config = PHPickerConfiguration()
+            config.selectionLimit = 20
+            config.filter = .images
 
-        let picker = PHPickerViewController(configuration: config)
-        picker.delegate = self
-        present(picker, animated: true)
+            let picker = PHPickerViewController(configuration: config)
+            picker.delegate = self
+            present(picker, animated: true)
+        } else {
+            let picker = UIImagePickerController()
+            picker.sourceType = .photoLibrary
+            picker.delegate = self
+            picker.allowsEditing = false
+            present(picker, animated: true)
+        }
     }
 
     private func openScore(at index: Int) {
@@ -129,12 +148,6 @@ extension ScoreImportViewController: UIDocumentPickerDelegate {
             }
         }
     }
-
-    private func showError(_ message: String) {
-        let alert = UIAlertController(title: "错误", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "确定", style: .default))
-        present(alert, animated: true)
-    }
 }
 
 extension ScoreImportViewController: PHPickerViewControllerDelegate {
@@ -165,5 +178,32 @@ extension ScoreImportViewController: PHPickerViewControllerDelegate {
                 self?.showError("无法读取图片文件")
             }
         }
+    }
+}
+
+extension ScoreImportViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+        picker.dismiss(animated: true)
+
+        if let image = info[.originalImage] as? UIImage {
+            let tempDir = FileManager.default.temporaryDirectory
+            let fileName = "image_\(Date().timeIntervalSince1970).png"
+            let destURL = tempDir.appendingPathComponent(fileName)
+
+            if let data = image.pngData() {
+                try? data.write(to: destURL)
+
+                if let score = ScoreManager.shared.importImages(from: [destURL]) {
+                    loadScores()
+                    openScore(at: scores.firstIndex(where: { $0.id == score.id }) ?? 0)
+                } else {
+                    showError("无法保存图片")
+                }
+            }
+        }
+    }
+
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true)
     }
 }
