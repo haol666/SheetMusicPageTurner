@@ -2,6 +2,20 @@ import UIKit
 import AVFoundation
 import Vision
 
+enum PageTurnAction: Int, CaseIterable {
+    case mouthOpen = 0
+    case blink = 1
+    case headNod = 2
+
+    var title: String {
+        switch self {
+        case .mouthOpen: return "张嘴"
+        case .blink: return "眨眼"
+        case .headNod: return "点头"
+        }
+    }
+}
+
 class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDelegate {
 
     private let session = AVCaptureSession()
@@ -22,6 +36,13 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
 
     private var mouthOpenThreshold: CGFloat = 0.7
     private var headNodThreshold: CGFloat = 0.12
+    private var eyeBlinkThreshold: CGFloat = 0.2
+
+    var forwardAction: PageTurnAction = .mouthOpen
+    var backwardAction: PageTurnAction = .headNod
+    var forwardThreshold: CGFloat = 0.7
+    var backwardThreshold: CGFloat = 0.12
+
     private var lastActionTime = Date().timeIntervalSince1970
     private let actionCooldown = 1.0
 
@@ -30,12 +51,14 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
 
     private var lastMouthOpenTime: TimeInterval = 0
     private var lastHeadNodTime: TimeInterval = 0
+    private var lastBlinkTime: TimeInterval = 0
 
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         setupCamera()
         loadCurrentScore()
+        updateGestureHint()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -90,7 +113,6 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         cameraPreviewView.layer.borderColor = UIColor.white.cgColor
         view.addSubview(cameraPreviewView)
 
-        gestureHintLabel.text = "张嘴→下一页 | 点头→上一页"
         gestureHintLabel.textAlignment = .center
         gestureHintLabel.font = UIFont.systemFont(ofSize: 12)
         gestureHintLabel.textColor = .gray
@@ -147,7 +169,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
 
             gestureHintLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 130),
             gestureHintLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            gestureHintLabel.widthAnchor.constraint(equalToConstant: 220),
+            gestureHintLabel.widthAnchor.constraint(equalToConstant: 280),
             gestureHintLabel.heightAnchor.constraint(equalToConstant: 30),
 
             cameraPreviewView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
@@ -289,36 +311,102 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         }
     }
 
-    @objc private func openSettings() {
-        let alert = UIAlertController(title: "面部识别设置", message: "调整翻页动作灵敏度", preferredStyle: .actionSheet)
+    private func updateGestureHint() {
+        gestureHintLabel.text = "\(forwardAction.title)→下一页 | \(backwardAction.title)→上一页"
+    }
 
-        alert.addAction(UIAlertAction(title: "张嘴灵敏度: 高", style: .default) { [weak self] _ in
+    @objc private func openSettings() {
+        let alert = UIAlertController(title: "翻页设置", message: "自定义向前向后翻页动作", preferredStyle: .actionSheet)
+
+        alert.addAction(UIAlertAction(title: "向前翻页动作", style: .default) { [weak self] _ in
+            self?.showActionSelection(forForward: true)
+        })
+
+        alert.addAction(UIAlertAction(title: "向后翻页动作", style: .default) { [weak self] _ in
+            self?.showActionSelection(forForward: false)
+        })
+
+        alert.addAction(UIAlertAction(title: "调整阈值", style: .default) { [weak self] _ in
+            self?.showThresholdAdjustment()
+        })
+
+        alert.addAction(UIAlertAction(title: "重置为默认", style: .destructive) { [weak self] _ in
+            self?.resetToDefault()
+        })
+
+        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+
+        present(alert, animated: true)
+    }
+
+    private func showActionSelection(forForward: Bool) {
+        let alert = UIAlertController(
+            title: forForward ? "选择向前翻页动作" : "选择向后翻页动作",
+            message: nil,
+            preferredStyle: .actionSheet
+        )
+
+        for action in PageTurnAction.allCases {
+            let title = action.title
+            alert.addAction(UIAlertAction(title: title, style: .default) { [weak self] _ in
+                if forForward {
+                    self?.forwardAction = action
+                } else {
+                    self?.backwardAction = action
+                }
+                self?.updateGestureHint()
+            })
+        }
+
+        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+        present(alert, animated: true)
+    }
+
+    private func showThresholdAdjustment() {
+        let alert = UIAlertController(title: "调整阈值", message: "灵敏度设置（值越小越灵敏）", preferredStyle: .actionSheet)
+
+        alert.addAction(UIAlertAction(title: "张嘴灵敏度: 高 (0.3)", style: .default) { [weak self] _ in
             self?.mouthOpenThreshold = 0.3
         })
-
-        alert.addAction(UIAlertAction(title: "张嘴灵敏度: 中", style: .default) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: "张嘴灵敏度: 中 (0.5)", style: .default) { [weak self] _ in
             self?.mouthOpenThreshold = 0.5
         })
-
-        alert.addAction(UIAlertAction(title: "张嘴灵敏度: 低", style: .default) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: "张嘴灵敏度: 低 (0.7)", style: .default) { [weak self] _ in
             self?.mouthOpenThreshold = 0.7
         })
 
-        alert.addAction(UIAlertAction(title: "点头灵敏度: 高", style: .default) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: "眨眼灵敏度: 高 (0.1)", style: .default) { [weak self] _ in
+            self?.eyeBlinkThreshold = 0.1
+        })
+        alert.addAction(UIAlertAction(title: "眨眼灵敏度: 中 (0.2)", style: .default) { [weak self] _ in
+            self?.eyeBlinkThreshold = 0.2
+        })
+        alert.addAction(UIAlertAction(title: "眨眼灵敏度: 低 (0.35)", style: .default) { [weak self] _ in
+            self?.eyeBlinkThreshold = 0.35
+        })
+
+        alert.addAction(UIAlertAction(title: "点头灵敏度: 高 (0.05)", style: .default) { [weak self] _ in
             self?.headNodThreshold = 0.05
         })
-
-        alert.addAction(UIAlertAction(title: "点头灵敏度: 中", style: .default) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: "点头灵敏度: 中 (0.08)", style: .default) { [weak self] _ in
             self?.headNodThreshold = 0.08
         })
-
-        alert.addAction(UIAlertAction(title: "点头灵敏度: 低", style: .default) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: "点头灵敏度: 低 (0.12)", style: .default) { [weak self] _ in
             self?.headNodThreshold = 0.12
         })
 
         alert.addAction(UIAlertAction(title: "取消", style: .cancel))
 
         present(alert, animated: true)
+    }
+
+    private func resetToDefault() {
+        forwardAction = .mouthOpen
+        backwardAction = .headNod
+        mouthOpenThreshold = 0.7
+        headNodThreshold = 0.12
+        eyeBlinkThreshold = 0.2
+        updateGestureHint()
     }
 
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
@@ -338,16 +426,62 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
 
         for face in results {
             guard let landmarks = face.landmarks else { continue }
-            detectMouth(landmarks: landmarks)
-            detectHeadNod(landmarks: landmarks)
+
+            let currentTime = Date().timeIntervalSince1970
+
+            if forwardAction == .mouthOpen && currentTime - lastMouthOpenTime > actionCooldown {
+                if detectMouthOpen(landmarks: landmarks) {
+                    lastMouthOpenTime = currentTime
+                    DispatchQueue.main.async {
+                        self.nextPage()
+                    }
+                }
+            } else if forwardAction == .blink && currentTime - lastBlinkTime > actionCooldown {
+                if detectBlink(landmarks: landmarks) {
+                    lastBlinkTime = currentTime
+                    DispatchQueue.main.async {
+                        self.nextPage()
+                    }
+                }
+            } else if forwardAction == .headNod && currentTime - lastHeadNodTime > actionCooldown {
+                if detectHeadNod(landmarks: landmarks) {
+                    lastHeadNodTime = currentTime
+                    DispatchQueue.main.async {
+                        self.nextPage()
+                    }
+                }
+            }
+
+            if backwardAction == .mouthOpen && currentTime - lastMouthOpenTime > actionCooldown {
+                if detectMouthOpen(landmarks: landmarks) {
+                    lastMouthOpenTime = currentTime
+                    DispatchQueue.main.async {
+                        self.previousPage()
+                    }
+                }
+            } else if backwardAction == .blink && currentTime - lastBlinkTime > actionCooldown {
+                if detectBlink(landmarks: landmarks) {
+                    lastBlinkTime = currentTime
+                    DispatchQueue.main.async {
+                        self.previousPage()
+                    }
+                }
+            } else if backwardAction == .headNod && currentTime - lastHeadNodTime > actionCooldown {
+                if detectHeadNod(landmarks: landmarks) {
+                    lastHeadNodTime = currentTime
+                    DispatchQueue.main.async {
+                        self.previousPage()
+                    }
+                }
+            }
         }
     }
 
-    private func detectMouth(landmarks: VNFaceLandmarks2D) {
-        guard let outerLips = landmarks.outerLips else { return }
+    private func detectMouthOpen(landmarks: VNFaceLandmarks2D) -> Bool {
+        guard let outerLips = landmarks.outerLips else { return false }
 
         let points = outerLips.normalizedPoints
-        guard points.count >= 10 else { return }
+        guard points.count >= 10 else { return false }
 
         let top = points[3]
         let bottom = points[9]
@@ -359,42 +493,50 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
 
         let mar = mouthHeight / mouthWidth
 
-        let currentTime = Date().timeIntervalSince1970
-        if mar > mouthOpenThreshold && currentTime - lastMouthOpenTime > actionCooldown {
-            lastMouthOpenTime = currentTime
-            DispatchQueue.main.async {
-                self.nextPage()
-            }
-        }
+        return mar > mouthOpenThreshold
     }
 
-    private func detectHeadNod(landmarks: VNFaceLandmarks2D) {
-        guard let nose = landmarks.nose,
-              let leftEye = landmarks.leftEye,
-              let rightEye = landmarks.rightEye else { return }
+    private func detectBlink(landmarks: VNFaceLandmarks2D) -> Bool {
+        guard let leftEye = landmarks.leftEye,
+              let rightEye = landmarks.rightEye else { return false }
 
-        guard nose.normalizedPoints.count > 0,
-              leftEye.normalizedPoints.count > 0,
-              rightEye.normalizedPoints.count > 0 else { return }
+        guard leftEye.normalizedPoints.count >= 6,
+              rightEye.normalizedPoints.count >= 6 else { return false }
+
+        let leftEyePoints = leftEye.normalizedPoints
+        let rightEyePoints = rightEye.normalizedPoints
+
+        let leftEyeHeight = abs(leftEyePoints[1].y - leftEyePoints[5].y)
+        let leftEyeWidth = abs(leftEyePoints[0].x - leftEyePoints[3].x)
+
+        let rightEyeHeight = abs(rightEyePoints[1].y - rightEyePoints[5].y)
+        let rightEyeWidth = abs(rightEyePoints[0].x - rightEyePoints[3].x)
+
+        let leftEAR = leftEyeHeight / leftEyeWidth
+        let rightEAR = rightEyeHeight / rightEyeWidth
+
+        let ear = (leftEAR + rightEAR) / 2
+
+        return ear < eyeBlinkThreshold
+    }
+
+    private func detectHeadNod(landmarks: VNFaceLandmarks2D) -> Bool {
+        guard let nose = landmarks.nose else { return false }
+
+        guard nose.normalizedPoints.count > 0 else { return false }
 
         let nosePoint = nose.normalizedPoints[0]
 
         if isFirstFaceDetection {
             previousNoseY = nosePoint.y
             isFirstFaceDetection = false
-            return
+            return false
         }
 
         let noseDelta = nosePoint.y - previousNoseY
         previousNoseY = nosePoint.y
 
-        let currentTime = Date().timeIntervalSince1970
-        if noseDelta > headNodThreshold && currentTime - lastHeadNodTime > actionCooldown {
-            lastHeadNodTime = currentTime
-            DispatchQueue.main.async {
-                self.previousPage()
-            }
-        }
+        return noseDelta > headNodThreshold
     }
 }
 
