@@ -58,6 +58,10 @@ class ScoreImportViewController: UIViewController {
 
         alert.addAction(UIAlertAction(title: "取消", style: .cancel))
 
+        if let popover = alert.popoverPresentationController {
+            popover.barButtonItem = navigationItem.rightBarButtonItem
+        }
+
         present(alert, animated: true)
     }
 
